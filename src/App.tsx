@@ -2,6 +2,9 @@ import "./App.css";
 import Papa from "papaparse";
 import { useState, useEffect } from "react";
 
+import GameCard from "./GameCard";
+import robloxIcon from "../public/roblox.svg";
+
 interface Row {
   rootGameId: number;
   universeId: number;
@@ -19,7 +22,7 @@ function App() {
   const [selectedGame, setSelectedGame] = useState<Row | null>(null);
 
   useEffect(() => {
-    fetch("/games.csv")
+    fetch(import.meta.env.BASE_URL + "games.csv")
       .then((res) => res.text())
       .then((csvText) => {
         Papa.parse<Row>(csvText, {
@@ -44,16 +47,17 @@ function App() {
       {data.length == 0 && <p>Loading data</p>}
       {data.length > 0 && selectedGame !== null && (
         <>
-          <p>Game name: {selectedGame.name}</p>
-          <p>Creator: {selectedGame.creatorName}</p>
-          <a
-            href={`https://www.roblox.com/games/${selectedGame.rootGameId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Click here to visit game
-          </a>
-          <p>Visits: {selectedGame.visits}</p>
+          <div className="flex items-center justify-center p-4 mb-4 gap-4 roudned-lg shadow-lg w-full">
+            <img className="w-12 h-12" src={robloxIcon} alt="Roblox Icon" />
+            <p className="text-3xl font-bold">Roblox Roulette</p>
+          </div>
+          <div className="grid grid-cols-4 grid-rows-5 gap-4 p-8 pt-4">
+            {Array(20)
+              .fill(0)
+              .map(() => {
+                return <GameCard game={selectRandomRow(data)} />;
+              })}
+          </div>
         </>
       )}
     </>
