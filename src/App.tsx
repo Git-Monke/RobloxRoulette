@@ -1,6 +1,6 @@
 import "./App.css";
 import Papa from "papaparse";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 
 import GameCard from "./GameCard";
 import robloxIcon from "../public/roblox.svg";
@@ -28,6 +28,8 @@ interface Row {
   visits: number;
 }
 
+const NEW_GAMES_PER_SCROLL = 18 * 3;
+
 const getRandomRow = (data: Row[]) =>
   data[Math.floor(Math.random() * data.length)];
 
@@ -37,12 +39,13 @@ const getUniqueRandomRows = (count: number, unused: Set<Row>) => {
   }
 
   let unusedArray = Array.from(unused);
+  let items = [];
 
-  for (let i = unusedArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [unusedArray[i], unusedArray[j]] = [unusedArray[j], unusedArray[i]];
+  for (let i = 0; i < count; i++) {
+    let j = Math.floor(Math.random() * unused.size);
+    items.push(unusedArray[j]);
+    unusedArray.splice(j, 1);
   }
-  const items = unusedArray.slice(0, count);
 
   return items;
 };
@@ -53,40 +56,53 @@ function App() {
   const [data, setData] = useState<Row[]>([]);
 
   const [filteredData, setFilteredData] = useState<Row[]>([]);
+  const unusedGames = useRef<Set<Row>>(new Set());
 
   const [games, setGames] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const observer = useRef<IntersectionObserver | null>(null);
+  const isLoading = useRef(false);
+
+  // const setOfFilteredData = useMemo<Set<Row>>(() => {
+  //   return new Set(filteredData);
+  // }, [filteredData]);
 
   const loadMoreGames = () => {
-    setLoading(false);
+    if (isLoading.current) {
+      return;
+    }
+
+    isLoading.current = true;
+
+    const items = getUniqueRandomRows(
+      NEW_GAMES_PER_SCROLL,
+      unusedGames.current
+    );
+    items.forEach((item) => unusedGames.current.delete(item));
+
     setGames((prev) => {
-      let pool = new Set(filteredData);
-      let used = new Set(games);
-      for (const usedGame of used) pool.delete(usedGame);
-      const items = getUniqueRandomRows(20, pool);
       return [...prev, ...items];
     });
+
+    isLoading.current = false;
   };
 
   const lastGameRef = useCallback(
     (node: HTMLElement | null) => {
-      if (loading) return;
+      if (isLoading.current == true) return;
       if (games.length == filteredData.length) return;
 
       observer.current?.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
-          setLoading(true);
           loadMoreGames();
         }
       });
 
       if (node) observer.current.observe(node);
     },
-    [loading, loadMoreGames]
+    [isLoading, loadMoreGames]
   );
 
   useEffect(() => {
@@ -108,6 +124,7 @@ function App() {
 
   useEffect(() => {
     setGames([]);
+    unusedGames.current = new Set(filteredData);
     loadMoreGames();
   }, [filteredData]);
 
@@ -155,7 +172,7 @@ function App() {
           </div>
           <div className="grid grid-cols-3 gap-4">
             {games.map((game, index) =>
-              index === games.length - 1 ? (
+              index === games.length - NEW_GAMES_PER_SCROLL ? (
                 <div key={index} ref={lastGameRef}>
                   <GameCard game={game} />
                 </div>
@@ -164,7 +181,11 @@ function App() {
               )
             )}
           </div>
-          {filteredData.length == games.length && <p>No more games to load</p>}
+          <div className="flex w-full justify-center">
+            {unusedGames.current.size == 0 && (
+              <p className="m-4">No more games to load!</p>
+            )}
+          </div>
         </section>
       </main>
     </>
