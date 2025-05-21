@@ -21,15 +21,13 @@ interface Row {
 }
 
 const tierColors: { [key: number]: string } = {
-  1e2: "#A0A0A0", // Bronze
-  1e3: "#4CAF50", // Green
-  1e4: "#2196F3", // Blue
-  1e5: "#9C27B0", // Purple
-  1e6: "#FF9800", // Orange
-  1e7: "#F44336", // Red
-  1e8: "#00BCD4", // Cyan
-  1e9: "#FFD700", // Gold
-  1e10: "#FFFFFF", // Diamond
+  1e2: "#808080", // Gray - Common
+  1e3: "#2ECC71", // Green - Uncommon
+  1e4: "#3498DB", // Blue - Rare
+  1e5: "#9B59B6", // Purple - Epic
+  1e6: "#E67E22", // Orange - Mythic
+  1e7: "#C0392B", // Crimson - Ultra
+  1e8: "#00FFFF", // Cyan - Exotic
 };
 
 const GameCard = ({ game }: { game: Row }) => {

@@ -4,6 +4,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 import GameCard from "./GameCard";
 import robloxIcon from "../public/roblox.svg";
+import { Filter, Settings, Sliders } from "lucide-react";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Row {
   rootGameId: number;
@@ -13,52 +28,65 @@ interface Row {
   visits: number;
 }
 
-function selectRandomRow(data: Row[]) {
-  return data[Math.floor(data.length * Math.random())];
-}
+const getRandomRow = (data: Row[]) =>
+  data[Math.floor(Math.random() * data.length)];
 
-function selectRandomRows(num: number, data: Row[]) {
-  return Array(num)
-    .fill(0)
-    .map(() => selectRandomRow(data));
-}
+const getUniqueRandomRows = (count: number, unused: Set<Row>) => {
+  if (count >= unused.size) {
+    return Array.from(unused);
+  }
+
+  let unusedArray = Array.from(unused);
+
+  for (let i = unusedArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [unusedArray[i], unusedArray[j]] = [unusedArray[j], unusedArray[i]];
+  }
+  const items = unusedArray.slice(0, count);
+
+  return items;
+};
 
 function App() {
+  const [minPlays, setMinPlays] = useState(100);
+
   const [data, setData] = useState<Row[]>([]);
+
+  const [filteredData, setFilteredData] = useState<Row[]>([]);
+
   const [games, setGames] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const getMoreGames = () => {
+  const loadMoreGames = () => {
     setLoading(false);
-    setGames((g) => {
-      return [...g, ...selectRandomRows(20, data)];
+    setGames((prev) => {
+      let pool = new Set(filteredData);
+      let used = new Set(games);
+      for (const usedGame of used) pool.delete(usedGame);
+      const items = getUniqueRandomRows(20, pool);
+      return [...prev, ...items];
     });
   };
 
-  const lastGameElementRef = useCallback(
+  const lastGameRef = useCallback(
     (node: HTMLElement | null) => {
-      if (loading) {
-        return;
-      }
+      if (loading) return;
+      if (games.length == filteredData.length) return;
 
-      if (observer.current) {
-        observer.current.disconnect();
-      }
+      observer.current?.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           setLoading(true);
-          getMoreGames();
+          loadMoreGames();
         }
       });
 
-      if (node) {
-        observer.current.observe(node);
-      }
+      if (node) observer.current.observe(node);
     },
-    [loading, getMoreGames]
+    [loading, loadMoreGames]
   );
 
   useEffect(() => {
@@ -68,40 +96,77 @@ function App() {
         Papa.parse<Row>(csvText, {
           header: true,
           skipEmptyLines: true,
-          complete: (results) => {
-            setData(results.data);
-          },
+          complete: (results) => setData(results.data),
           delimiter: " ",
         });
       });
-
-    getMoreGames();
   }, []);
+
+  useEffect(() => {
+    setFilteredData(data.filter((v) => v.visits >= minPlays));
+  }, [data, minPlays]);
+
+  useEffect(() => {
+    setGames([]);
+    loadMoreGames();
+  }, [filteredData]);
+
+  if (data.length === 0) {
+    return <p>Loading data...</p>;
+  }
 
   return (
     <>
-      {data.length == 0 && <p>Loading data</p>}
-      {data.length > 0 && games.length > 0 && (
-        <>
-          <div className="flex items-center justify-center p-4 mb-4 gap-4 roudned-lg shadow-lg w-full">
-            <img className="w-12 h-12" src={robloxIcon} alt="Roblox Icon" />
-            <p className="text-3xl font-bold">Roblox Roulette</p>
+      <header className="flex items-center justify-center p-4 mb-4 gap-4 rounded-lg shadow-lg w-full">
+        <img className="w-12 h-12" src={robloxIcon} alt="Roblox Icon" />
+        <h1 className="text-3xl font-bold">Roblox Roulette</h1>
+      </header>
+
+      <main className="w-screen flex justify-center">
+        <section className="p-8 pt-4 flex flex-col gap-8 w-[75%]">
+          <div className="flex w-full justify-between">
+            <h2 className="text-2xl font-bold">Random Games</h2>
+            <Popover>
+              <PopoverTrigger>
+                <Sliders></Sliders>
+              </PopoverTrigger>
+              <PopoverContent>
+                <h3 className="font-bold">Set minimum plays</h3>
+                <Select
+                  defaultValue="100"
+                  onValueChange={(v) => {
+                    setMinPlays(parseInt(v));
+                  }}
+                  value={minPlays.toString()}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="100+ Plays"></SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="100">100+ Plays</SelectItem>
+                    <SelectItem value="1000">1k+ Plays</SelectItem>
+                    <SelectItem value="10000">10k+ Plays</SelectItem>
+                    <SelectItem value="100000">100k+ Plays</SelectItem>
+                    <SelectItem value="1000000">1M+ Plays</SelectItem>
+                  </SelectContent>
+                </Select>
+              </PopoverContent>
+            </Popover>
           </div>
-          <div className="grid grid-cols-4 gap-4 p-8 pt-4">
-            {games.map((_, i) => {
-              if (i == games.length - 1) {
-                return (
-                  <div ref={lastGameElementRef}>
-                    <GameCard game={games[i]} />
-                  </div>
-                );
-              } else {
-                return <GameCard game={games[i]} />;
-              }
-            })}
+          <div className="grid grid-cols-3 gap-4">
+            {games.map((game, index) =>
+              index === games.length - 1 ? (
+                <div key={index} ref={lastGameRef}>
+                  <GameCard game={game} />
+                </div>
+              ) : (
+                <GameCard key={index} game={game} />
+              )
+            )}
           </div>
-        </>
-      )}
+          {filteredData.length == games.length && <p>No more games to load</p>}
+        </section>
+      </main>
     </>
   );
 }
