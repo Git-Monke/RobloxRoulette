@@ -1,10 +1,10 @@
 import "./App.css";
 import Papa from "papaparse";
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 import GameCard from "./GameCard";
 import robloxIcon from "../public/roblox.svg";
-import { Filter, Settings, Sliders } from "lucide-react";
+import { Sliders } from "lucide-react";
 
 import {
   Popover,
@@ -29,9 +29,6 @@ interface Row {
 }
 
 const NEW_GAMES_PER_SCROLL = 18 * 3;
-
-const getRandomRow = (data: Row[]) =>
-  data[Math.floor(Math.random() * data.length)];
 
 const getUniqueRandomRows = (count: number, unused: Set<Row>) => {
   if (count >= unused.size) {
