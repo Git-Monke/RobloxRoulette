@@ -137,7 +137,7 @@ function App() {
       </header>
 
       <main className="w-screen flex justify-center">
-        <section className="p-8 pt-4 flex flex-col gap-8 w-[75%]">
+        <section className="pt-4 flex flex-col gap-8 w-[90%] sm:w-[90%] md:w-[75%] ">
           <div className="flex w-full justify-between">
             <h2 className="text-2xl font-bold">Random Games</h2>
             <Popover>
@@ -167,7 +167,7 @@ function App() {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {games.map((game, index) =>
               index === games.length - NEW_GAMES_PER_SCROLL ? (
                 <div key={index} ref={lastGameRef}>
