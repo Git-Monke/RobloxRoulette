@@ -63,17 +63,29 @@ function App() {
   const isLoading = useRef(false);
 
   const [shift, setShift] = useState(0);
+  const paused = useRef(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setShift((s) => s + 1);
+      if (!paused.current) {
+        setShift((s) => s + 1);
+      }
     }, 2000);
 
     return () => clearInterval(interval);
   }, []);
-  // const setOfFilteredData = useMemo<Set<Row>>(() => {
-  //   return new Set(filteredData);
-  // }, [filteredData]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      paused.current = document.hidden;
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const loadMoreGames = () => {
     if (isLoading.current) {
