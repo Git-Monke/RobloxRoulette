@@ -63,20 +63,23 @@ const GameCard = ({ game }: { game: Row }) => {
             <CardTitle className="text-xl font-bold truncate mb-2 w-full">
               {game.name}
             </CardTitle>
-            <CardDescription className="flex flex-col mt-1 gap-2">
+            <CardDescription className="flex flex-col mt-1 gap-2 w-full">
               <div className="flex flex-wrap  gap-2 ">
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Users className="h-3 w-3" />
                   <span>{formatVisits(game.visits)} visits</span>
                 </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 hidden lg:flex"
+                >
                   <Award className="h-3 w-3" />
                   <span>Universe #{game.universeId}</span>
                 </Badge>
               </div>
-              <div>
+              <div className="w-full">
                 <span className="mr-1">By</span>
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-foreground truncate w-full">
                   {game.creatorName}
                 </span>
               </div>
