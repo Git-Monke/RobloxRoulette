@@ -254,7 +254,7 @@ function App() {
           </div>
         </section>
       </main>
-      <Footer></Footer>
+      <Footer gameCount={filteredData.length}></Footer>
     </>
   );
 }
