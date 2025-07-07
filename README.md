@@ -1,5 +1,7 @@
 # Roblox Roulette
 
+![Roblox Screenshot](roblox-screenshot.png)
+
 ## About This Project
 
 Me and my brother have played Roblox together since we were very little. Of course, I don't play it on my own anymore. But it is still a way that we bond together. However, modern roblox is very commercial, and it can
